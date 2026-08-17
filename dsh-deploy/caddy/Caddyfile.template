@@ -1,0 +1,10 @@
+# Caddyfile template — copy to /etc/caddy/Caddyfile (deploy.sh does this automatically).
+# Replace dsh.example.com with your domain, and set basic auth credentials.
+dsh.example.com {
+    # Optional: protect the whole site with a username + password.
+    # basic_auth {
+    #     yourusername $2y$10$...bcrypt-hash...  # generate via: htpasswd -nbB user pass | cut -d: -f2
+    # }
+
+    reverse_proxy 127.0.0.1:3090
+}

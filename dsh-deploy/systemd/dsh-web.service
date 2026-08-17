@@ -1,0 +1,13 @@
+[Unit]
+Description=dsh web (DeepSeek Harness)
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/dsh
+ExecStart=/usr/bin/node apps/cli/lib/bin.js web
+Restart=always
+RestartSec=3
+EnvironmentFile=/opt/dsh/.env
+
+[Install]
+WantedBy=multi-user.target
