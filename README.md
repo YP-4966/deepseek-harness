@@ -12,7 +12,7 @@ DeepSeek Harness（`dsh`）是 [DeepSeek AI](https://deepseek.com) 开发的开�
 
 ## 1. 项目是什么
 
-- 一个可自举的智能体运行框架：会话、系统提示词、工具、agent 循环、模型适配全部以插件形式存在，**没有需要打补丁的"特权核心"**。
+- 一个可自举的智能体运行框架：会话、系统提示词、工具、agent 循环、模型适配全部以插件形式存在，**没有需要打补丁的\"特权核心\"**。
 - 扩展方式：在 Cordis 上下文（`ctx`）旁边挂载插件；插件通过 `ctx.effect()` / `ctx.on()` / `ctx.waterfall()` 注册能力，卸载时自动回滚。
 - 产物形态：Web UI（默认 `http://127.0.0.1:3080`）、headless 一次性执行、ACP 自动化服务器、JSON-RPC SDK、Python SDK。
 
@@ -92,7 +92,7 @@ pnpm dsh web
 ```
 
 ### 环境要求
-- Node.js `^22.19 || >=24`，pnpm workspaces，ESM（`"type": "module"`）全量启用。
+- Node.js `^22.19 || >=24`，pnpm workspaces，ESM（`\"type\": \"module\"`）全量启用。
 - 真实 API 测试/演示需要 `DEEPSEEK_API_KEY`（root `.env` 或环境变量）。
 
 ## 5. 常用命令
@@ -126,7 +126,7 @@ dsh Web UI 默认仅监听 `127.0.0.1:3080`，外部设备无法直接访问。`
 
 ### 7.1 重写代理（rewrite-proxy）
 
-用 `rewrite-proxy.mjs` 在 `127.0.0.1:3090` 开启一个透明代理，将请求的 `Host` 改写为 `127.0.0.1:3080`，并剥离 `Origin`/`Sec-Fetch-*` 头，使远程请求"看起来"来自本地回环，绕过信任栅栏。
+用 `rewrite-proxy.mjs` 在 `127.0.0.1:3090` 开启一个透明代理，将请求的 `Host` 改写为 `127.0.0.1:3080`，并剥离 `Origin`/`Sec-Fetch-*` 头，使远程请求\"看起来\"来自本地回环，绕过信任栅栏。
 
 ```sh
 node rewrite-proxy.mjs   # 监听 127.0.0.1:3090 -> 127.0.0.1:3080
@@ -188,7 +188,7 @@ DOMAIN=dsh.example.com API_KEY=sk-xxx bash deploy.sh
 
 ## 10. 社区与支持
 
-- 反馈与 bug：<a href="https://github.com/deepseek-ai/deepseek-harness/discussions">GitHub Discussions</a>
+- 反馈与 bug：<a href=\"https://github.com/deepseek-ai/deepseek-harness/discussions\">GitHub Discussions</a>
 - 插件仓库可添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题便于被发现
 - 中文社区：企微小助手 / 入群问卷 / 微信公众号（见 [README.zh.md](README.zh.md) 二维码）
 
