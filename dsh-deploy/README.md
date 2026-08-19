@@ -2,6 +2,8 @@
 
 把 DeepSeek Harness（dsh）部署到一台有公网 IP 的 Linux 服务器（Ubuntu 22.04 / 24.04），任何设备通过固定网址访问。
 
+> 📌 **本目录与 `YP-4966/dsh-codespace` 仓库的关系**：本目录（`dsh-deploy/`）是部署脚本的**归档副本**；GitHub Codespaces 部署的**权威版本**在 [`YP-4966/dsh-codespace`](https://github.com/YP-4966/dsh-codespace) 仓库（含 `.devcontainer/`、最新版 `codespaces-setup.sh` 等）。两者角色不同、需要同时存在，具体分工与同步流程见 [dsh-codespace/SYNC.md](https://github.com/YP-4966/dsh-codespace/blob/main/SYNC.md)。
+
 ## 目录结构
 
 ```
