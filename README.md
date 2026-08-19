@@ -120,23 +120,78 @@ pnpm run demo:acp       # ACP 自动化服务器（需 key）
 - 静态门禁与测试通过 tsconfig `paths` 解析到 `src`（源码平面）；消费构建产物 `lib/` 的门禁单独声明依赖（产物平面）。
 - 钩子：非平凡变更必须附 Agent Note（`.agents/notes/`），归档后的笔记视为冻结、不可再改。
 
-## 7. 部署与远程访问（实践记录）
+## 7. 部署与远程访问
 
-- dsh Web UI 监听 `127.0.0.1:3080`；`packages/client/connection/src/api-request-trust.ts` 中的 `isTrustedApiRequest` 要求 Host 为 loopback 或匹配 `trustedHosts`，否则 `/api/*` 返回 403（防跨站栅栏）。
-- 远程访问方案：用 `rewrite-proxy.mjs` 在 3090 端口把请求 Host 改写为 `127.0.0.1:3080`、剥离 `Origin`/`Sec-Fetch-*` 头以绕过栅栏；再将该端口设为 Public。
-- 一键云端部署（GitHub Codespaces）的完整手册与脚本维护在 **`dsh-codespace` 仓库**（含部署脚本、devcontainer 钩子、故障排查表）。
+dsh Web UI 默认仅监听 `127.0.0.1:3080`，外部设备无法直接访问。`packages/client/connection/src/api-request-trust.ts` 中的 `isTrustedApiRequest` 要求来源为 loopback 或匹配 `trustedHosts`，否则 `/api/*` 返回 403（防跨站/防 DNS 重绑定栅栏）。
 
-## 8. Python SDK
+### 7.1 重写代理（rewrite-proxy）
+
+用 `rewrite-proxy.mjs` 在 `127.0.0.1:3090` 开启一个透明代理，将请求的 `Host` 改写为 `127.0.0.1:3080`，并剥离 `Origin`/`Sec-Fetch-*` 头，使远程请求"看起来"来自本地回环，绕过信任栅栏。
+
+```sh
+node rewrite-proxy.mjs   # 监听 127.0.0.1:3090 -> 127.0.0.1:3080
+```
+
+### 7.2 GitHub Codespaces 部署
+
+`dsh-deploy/` 目录包含一键部署到 GitHub Codespaces 的脚本：
+
+| 文件 | 用途 |
+|---|---|
+| `codespaces-setup.sh` | 全自动部署：安装依赖 → 克隆仓库 → 构建 → 配置 API Key → 启动服务 |
+| `start.sh` | Codespace 休眠/重建后重新拉起 dsh 服务 |
+| `rewrite-proxy.mjs` | 与根目录相同的重写代理 |
+
+部署后会同时启动：
+- `http://127.0.0.1:3080` — dsh Web UI
+- `http://127.0.0.1:3090` — rewrite-proxy（需在 Codespaces Ports 面板设为 Public 以对外暴露）
+
+### 7.3 VPS 部署
+
+`dsh-deploy/` 也包含完整的 VPS 一键部署方案：
+
+| 文件 | 用途 |
+|---|---|
+| `deploy.sh` | 在 Ubuntu 22.04/24.04 上一键部署：安装 Node 24 + Caddy + bubblewrap → 构建 dsh → 配置 systemd 服务 → 申请 HTTPS 证书 |
+| `systemd/dsh-web.service` | dsh web 的 systemd 单元（`/opt/dsh`） |
+| `systemd/dsh-proxy.service` | rewrite-proxy 的 systemd 单元 |
+| `caddy/Caddyfile.template` | Caddy 反代模板（含自动 HTTPS 与可选的 basic_auth 密码保护） |
+
+一键部署命令：
+```sh
+DOMAIN=dsh.example.com API_KEY=sk-xxx bash deploy.sh
+```
+
+### 7.4 其他辅助脚本
+
+工作区根目录还包含以下在工作过程中使用的辅助脚本：
+
+| 文件 | 用途 |
+|---|---|
+| `cloudflared-config.yml` | cloudflared 隧道配置（指向 `127.0.0.1:3090`） |
+| `relay-proxy.py` | HTTP CONNECT 中继代理（绕过沙箱 egress 限制） |
+| `ssh-bridge.py` | SSH ProxyCommand 桥接（通过 egress 代理建立 SSH 连接） |
+| `lt-diag.py` | localtunnel 协议诊断工具 |
+
+## 8. 隐私与安全
+
+- **API Key 不硬编码**：所有部署脚本均通过环境变量或交互式输入接收 API Key，**不会**将真实密钥写入脚本代码。
+- **`.env` 与 `~/.dsh/.credentials.yaml`**：部署脚本将 API Key 写入这两个文件用于运行时读取。务必确保它们被 `.gitignore` 排除，切勿提交到 Git。
+- **密码保护**：dsh 本身没有用户认证。若通过公网暴露，强烈建议使用 `AUTH_USER`/`AUTH_PASS` 或 Caddy 的 `basic_auth` 配置密码保护，避免 API Key 被他人消耗。
+- **凭证优先级**：`~/.dsh/.credentials.yaml` > `.env` > 进程环境变量。若多个位置都配置了同一变量，文件层优先级最高。
+- **Session 日志**：dsh 的会话日志包含模型输入输出，可能涉及敏感信息。日志文件位于会话存储目录，注意访问权限控制。
+
+## 9. Python SDK
 
 - `deepseek-harness-sdk` / `deepseek-harness-runtime-bin`：以子进程方式驱动 dsh，通过 stdio 上的换行分隔 JSON-RPC 通信。
 - SDK 启动匹配的内置运行时，除非显式指定通道；运行时总是要求显式配置。详见 [python/README.md](python/README.md)。
 
-## 9. 社区与支持
+## 10. 社区与支持
 
 - 反馈与 bug：<a href="https://github.com/deepseek-ai/deepseek-harness/discussions">GitHub Discussions</a>
 - 插件仓库可添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题便于被发现
 - 中文社区：企微小助手 / 入群问卷 / 微信公众号（见 [README.zh.md](README.zh.md) 二维码）
 
-## 10. 许可证
+## 11. 许可证
 
 [MIT](LICENSE)；第三方依赖许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
